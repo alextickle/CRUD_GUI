@@ -259,7 +259,7 @@ public class View extends JFrame{
 		homePanel = new JPanel();
 		homePanel.setLayout(new GridLayout(2, 1));
 		homePanel.add(new JLabel("Welcome to CRUD.", SwingConstants.CENTER));
-		homePanel.add(new JLabel("Please make a selection."));
+		homePanel.add(new JLabel("Please make a selection.", SwingConstants.CENTER));
 		homePanel.setVisible(true);
 		homePanel.setPreferredSize(preferredPanelDimension);
 		contentPanel.add(homePanel);
@@ -268,14 +268,14 @@ public class View extends JFrame{
 		// initialize create panel
 		createPanel = new JPanel();
 		createPanel.setLayout(new GridLayout(8, 1));
-		createPanel.add(new JLabel("CREATE ITEM"));
-		createPanel.add(new JLabel("Title:"));
+		createPanel.add(new JLabel("CREATE ITEM", SwingConstants.CENTER));
+		createPanel.add(new JLabel("   Title:"));
 		createTitleField = new JTextField();
 		createPanel.add(createTitleField);
-		createPanel.add(new JLabel("Artist:"));
+		createPanel.add(new JLabel("   Artist:"));
 		createArtistField = new JTextField();
 		createPanel.add(createArtistField);
-		createPanel.add(new JLabel("Media type:"));
+		createPanel.add(new JLabel("   Media type:"));
 		createTypeField = new JComboBox<String>(this.mediaTypes);
 		createTypeField.setMaximumRowCount(4);
 		createPanel.add(createTypeField);
@@ -287,11 +287,11 @@ public class View extends JFrame{
 		// initialize update panel
 		updatePanel = new JPanel();
 		updatePanel.setLayout(new GridLayout(6, 1));
-		updatePanel.add(new JLabel("UPDATE ITEM"));
-		updatePanel.add(new JLabel("Title:"));
+		updatePanel.add(new JLabel("UPDATE ITEM", SwingConstants.CENTER));
+		updatePanel.add(new JLabel("   Title:"));
 		updateTitleField = new JTextField();
 		updatePanel.add(updateTitleField);
-		updatePanel.add(new JLabel("Artist:"));
+		updatePanel.add(new JLabel("   Artist:"));
 		updateArtistField = new JTextField();
 		updatePanel.add(updateArtistField);
 		updatePanel.setVisible(false);
@@ -302,18 +302,18 @@ public class View extends JFrame{
 		// initialize search panel
 		searchPanel = new JPanel();
 		searchPanel.setLayout(new GridLayout(6, 2));
-		searchPanel.add(new JLabel("SEARCH ITEM"));
-		searchPanel.add(new JLabel("Leave blank to skip"));
-		searchPanel.add(new JLabel("Id:"));
+		searchPanel.add(new JLabel("SEARCH ITEM", SwingConstants.CENTER));
+		searchPanel.add(new JLabel("Leave blank to skip", SwingConstants.CENTER));
+		searchPanel.add(new JLabel("   Id:"));
 		searchIdField = new JTextField();
 		searchPanel.add(searchIdField);
-		searchPanel.add(new JLabel("Title:"));
+		searchPanel.add(new JLabel("   Title:"));
 		searchTitleField = new JTextField();
 		searchPanel.add(searchTitleField);
-		searchPanel.add(new JLabel("Artist:"));
+		searchPanel.add(new JLabel("   Artist:"));
 		searchArtistField = new JTextField();
 		searchPanel.add(searchArtistField);
-		searchPanel.add(new JLabel("Media type:"));
+		searchPanel.add(new JLabel("   Media type:"));
 		searchTypeField = new JComboBox<String>(this.mediaTypes);
 		searchTypeField.setMaximumRowCount(4);
 		searchPanel.add(searchTypeField);
@@ -326,7 +326,7 @@ public class View extends JFrame{
 		// initialize results panel
 		resultsPanel = new JPanel();
 		resultsPanel.setLayout(new GridLayout(2,1));
-		resultsPanel.add(new JLabel("RESULTS"));
+		resultsPanel.add(new JLabel("RESULTS", SwingConstants.CENTER));
 		resultsList = new JList<String>(resultsArray);
 		resultsList.setVisibleRowCount(20);
 	    resultsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -339,16 +339,15 @@ public class View extends JFrame{
 		// initialize itemCreated panel
 		itemCreatedPanel = new JPanel();
 		itemCreatedPanel.setLayout(new GridLayout(8, 1));
-		itemCreatedPanel.add(new JLabel("ITEM CREATED"));
-		itemCreatedPanel.add(new JLabel("Title:"));
-		itemCreatedTitle = new JLabel("(Title)");
+		itemCreatedPanel.add(new JLabel("ITEM CREATED", SwingConstants.CENTER));
+		itemCreatedPanel.add(new JLabel("   Title:"));
+		itemCreatedTitle = new JLabel("   (Title)");
 		itemCreatedPanel.add(itemCreatedTitle);
-		itemCreatedPanel.add(createTitleField);
-		itemCreatedPanel.add(new JLabel("Artist:"));
-		itemCreatedArtist = new JLabel("(Artist)");
+		itemCreatedPanel.add(new JLabel("  Artist:"));
+		itemCreatedArtist = new JLabel("   (Artist)");
 		itemCreatedPanel.add(itemCreatedArtist);
-		itemCreatedPanel.add(new JLabel("Media type:"));
-		itemCreatedType = new JLabel("((Media type)");
+		itemCreatedPanel.add(new JLabel("   Media type:"));
+		itemCreatedType = new JLabel("   (Media type)");
 		itemCreatedPanel.add(itemCreatedType);
 		itemCreatedPanel.setVisible(false);
 		itemCreatedPanel.setPreferredSize(preferredPanelDimension);
@@ -358,16 +357,15 @@ public class View extends JFrame{
 		// initialize itemUpdated panel
 		itemUpdatedPanel = new JPanel();
 		itemUpdatedPanel.setLayout(new GridLayout(8, 1));
-		itemUpdatedPanel.add(new JLabel("ITEM UPDATED"));
-		itemUpdatedPanel.add(new JLabel("Title:"));
-		itemUpdatedTitle = new JLabel("(Title)");
+		itemUpdatedPanel.add(new JLabel("ITEM UPDATED", SwingConstants.CENTER));
+		itemUpdatedPanel.add(new JLabel("   Title:"));
+		itemUpdatedTitle = new JLabel("   (Title)");
 		itemUpdatedPanel.add(itemUpdatedTitle);
-		itemUpdatedPanel.add(createTitleField);
-		itemUpdatedPanel.add(new JLabel("Artist:"));
-		itemUpdatedArtist = new JLabel("(Artist)");
+		itemUpdatedPanel.add(new JLabel("   Artist:"));
+		itemUpdatedArtist = new JLabel("   (Artist)");
 		itemUpdatedPanel.add(itemUpdatedArtist);
-		itemUpdatedPanel.add(new JLabel("Media type:"));
-		itemUpdatedType = new JLabel("((Media type)");
+		itemUpdatedPanel.add(new JLabel("   Media type:"));
+		itemUpdatedType = new JLabel("   (Media type)");
 		itemUpdatedPanel.add(itemUpdatedType);
 		itemUpdatedPanel.setVisible(false);
 		itemUpdatedPanel.setPreferredSize(preferredPanelDimension);
@@ -377,15 +375,15 @@ public class View extends JFrame{
 		// initialize itemDeleted panel
 		itemDeletedPanel = new JPanel();
 		itemDeletedPanel.setLayout(new GridLayout(8, 1));
-		itemDeletedPanel.add(new JLabel("ITEM DELETED"));
-		itemDeletedPanel.add(new JLabel("Title:"));
-		itemDeletedTitle = new JLabel("(Title)");
+		itemDeletedPanel.add(new JLabel("ITEM DELETED", SwingConstants.CENTER));
+		itemDeletedPanel.add(new JLabel("   Title:"));
+		itemDeletedTitle = new JLabel("   (Title)");
 		itemDeletedPanel.add(itemDeletedTitle);
-		itemDeletedPanel.add(new JLabel("Artist:"));
-		itemDeletedArtist = new JLabel("(Artist)");
+		itemDeletedPanel.add(new JLabel("   Artist:"));
+		itemDeletedArtist = new JLabel("   (Artist)");
 		itemDeletedPanel.add(itemDeletedArtist);
-		itemDeletedPanel.add(new JLabel("Media type:"));
-		itemDeletedType = new JLabel("((Media type)");
+		itemDeletedPanel.add(new JLabel("   Media type:"));
+		itemDeletedType = new JLabel("   (Media type)");
 		itemDeletedPanel.add(itemDeletedType);
 		itemDeletedPanel.setVisible(false);
 		itemDeletedPanel.setPreferredSize(preferredPanelDimension);
