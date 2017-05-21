@@ -304,7 +304,7 @@ public class TextView implements Viewable {
 				updateCommand.setMediaItem(new Book(updatedTitle, updatedArtist));
 				break;
 		}
-		updateCommand.setQueryIndex(itemToUpdate);
+		updateCommand.setQueryIndex(itemToUpdate - 1);
 		return updateCommand;
 	}
 
@@ -331,7 +331,7 @@ public class TextView implements Viewable {
 			}
 			scanner.nextLine();
 		} while (itemToDelete < 1 || itemToDelete > queryResults.size());
-		deleteCommand.setQueryIndex(itemToDelete);
+		deleteCommand.setQueryIndex(itemToDelete - 1);
 		deleteCommand.setMediaItem(queryResults.get(itemToDelete - 1));
 		return deleteCommand;
 	}

@@ -15,6 +15,7 @@ public class Model{
 	private ArrayList<Properties> currentProperties;
 	private static Formatter output;
 	private Scanner input;
+	private ArrayList<String[]> lastSearchParams;
 
 	// next created item will receive this id number
 	private int currentId;
@@ -70,12 +71,13 @@ public class Model{
 					array = new String[]{"mediaType", parameter};
 					searchParameters.add(array);
 				}
-
+				lastSearchParams = searchParameters;
 				ArrayList<Properties> results = parameterSearch(searchParameters);
 				currentProperties = results;
 				break;
 			case UPDATE:
 				System.out.println("command query index: " + command.getQueryIndex());
+				System.out.println("currentProperties size: " + currentProperties.size());
 				Properties recordToUpdate = currentProperties.get(command.getQueryIndex());
 				String stringToUpdate = item.getTitle();
 				if (!stringToUpdate.equals("")){
@@ -271,7 +273,10 @@ public class Model{
 
 	// model receives detailed request from view
 	// and sends the requested info (8)
-	public void sendUpdatedInfoToView(){
+	public void sendUpdatedInfoToView(Command current){
+		if (current.getType() == Command.Type.UPDATE || current.getType() == Command.Type.DELETE){
+			currentProperties = parameterSearch(lastSearchParams);
+		}
 		view.updateSelf(exportCurrentProps());
 	}
 

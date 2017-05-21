@@ -219,7 +219,7 @@ public class View extends JFrame{
 						createArtistField.setText("");
 						break;
 					case ITEM_DELETED:
-						resultsArray = removeDeletedItem(resultsList.getSelectedIndex());
+						resultsArray = stringifyQueryResults();
 						resultsList.setListData(resultsArray);
 						resultsMessage.setText(resultsArray.length + " item(s) found:");
 						hideAllComponents();
@@ -237,7 +237,7 @@ public class View extends JFrame{
 							selectedInfoArray[1],
 							updateTitleField.getText() == "" ? item.getTitle() : updateTitleField.getText(),
 							updateArtistField.getText() == "" ? item.getArtist() : updateTitleField.getText());
-						resultsArray[resultsList.getSelectedIndex()] = updated;
+						resultsArray = stringifyQueryResults();
 						resultsList.setListData(resultsArray);
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
@@ -336,14 +336,22 @@ public class View extends JFrame{
 		
 		// initialize results panel
 		resultsPanel = new JPanel();
-		resultsPanel.setLayout(new GridLayout(3,1));
-		resultsPanel.add(new JLabel("RESULTS", SwingConstants.CENTER));
-		resultsMessage = new JLabel("");
-		resultsPanel.add(resultsMessage);
+		resultsPanel.setLayout(new FlowLayout());
+		JPanel resultsHeader = new JPanel();
+		resultsHeader.setLayout(new GridLayout(5, 1));
+		resultsHeader.add(new JLabel("RESULTS", SwingConstants.CENTER));
+		resultsHeader.add(new JLabel(" "));
+		resultsMessage = new JLabel("", SwingConstants.LEFT);
+		resultsHeader.add(resultsMessage);
+		resultsHeader.add(new JLabel(" "));
+		resultsHeader.add(new JLabel("Id - Media type - Title - Artist", SwingConstants.LEFT));
+		resultsPanel.add(resultsHeader);
 		resultsList = new JList<String>(new String[1]);
 		resultsList.setVisibleRowCount(20);
 	    resultsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	    resultsPanel.add(new JScrollPane(resultsList));
+	    JScrollPane scroll = new JScrollPane(resultsList);
+	    scroll.setPreferredSize(new Dimension(400, 200));
+	    resultsPanel.add(scroll);
 	    resultsPanel.setVisible(false);
 	    resultsPanel.setPreferredSize(preferredPanelDimension);
 		contentPanel.add(resultsPanel);
@@ -542,7 +550,7 @@ public class View extends JFrame{
 	// view receives alert from model and asks
 	// model for the current mediaItems (7)
 	public void requestInfoFromModel(){
-		model.sendUpdatedInfoToView();
+		model.sendUpdatedInfoToView(currentCommand);
 	}
 	
 	// view receives info from model and updates self (9)
@@ -584,14 +592,17 @@ public class View extends JFrame{
 				}
 				break;
 			case UPDATE:
+				queryResults = currentItems;
 				hideAllComponents();
 				continueButton.setVisible(true);
 				itemUpdatedTitle.setText(item.getTitle());
 				itemUpdatedArtist.setText(item.getArtist());
+				itemUpdatedType.setText(item.getMediaType());
 				itemUpdatedPanel.setVisible(true);
 				state = State.ITEM_UPDATED;
 				break;
 			case DELETE:
+				queryResults = currentItems;
 				hideAllComponents();
 				continueButton.setVisible(true);
 				itemDeletedTitle.setText(item.getTitle());

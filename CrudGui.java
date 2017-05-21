@@ -1,5 +1,3 @@
-import javax.swing.JFrame;
-
 public class CrudGui {
 
 	public static void main(String[] args) {
