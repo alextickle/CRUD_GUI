@@ -1,10 +1,10 @@
-public class CrudGui {
+public class CrudApp {
 
 	public static void main(String[] args) {
 		
 		Model model = new Model();
 		Controller controller = new Controller(model);
-		View view = new View(controller);
+		GuiView view = new GuiView(controller);
 		
 		model.setView(view);
 		view.setModel(model);

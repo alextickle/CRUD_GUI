@@ -2,7 +2,6 @@ currentId: 46
 1_CD_Axis of Love_Jimi Hendrix
 4_CD_Kid A_Radiohead
 2_Book_Lord of the Rings_J.R.R. Tolkien
-7_Book_Dune_Frank Herbert
 8_CD_Glassworks_Philip Glass
 9_DVD_Black Hawk Down_Ridley Scott
 10_DVD_Point Break_Kathryn Bigelow
@@ -36,4 +35,6 @@ currentId: 46
 39_CD_American Beauty_Grateful Dead
 40_Book_Alice in Wonderland_Lewis Carrol
 41_CD_This Old Smog_Mac Demarco
-44_CD_In Between Dreams_Jack Johnson
+43_CD_Blonde on Blonde_Bob Dylan
+44_Book_Smune_Frank Herbert
+45_Book_The Technological Society_Jacques Ellul

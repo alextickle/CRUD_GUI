@@ -4,7 +4,7 @@ import java.util.InputMismatchException;
 
 public class TextView implements Viewable {
 	private Controller controller;
-	private Model model;
+	private Modelable model;
 	private Scanner scanner;
 	private int input;
 	private Command currentCommand;
@@ -17,7 +17,7 @@ public class TextView implements Viewable {
 	}
 
 	@Override
-	public void setModel(Model m) {
+	public void setModel(Modelable m) {
 		this.model = m;
 	}
 
@@ -102,7 +102,7 @@ public class TextView implements Viewable {
 	// view receives alert from model and asks
 	// model for the current mediaItems (7)
 	public void requestInfoFromModel(){
-		model.sendUpdatedInfoToView();
+		model.sendUpdatedInfoToView(currentCommand);
 	}
 
 	// view receives info from model and updates self (9)

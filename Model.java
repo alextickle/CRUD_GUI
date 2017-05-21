@@ -8,9 +8,9 @@ import java.util.FormatterClosedException;
 import java.util.Properties;
 import java.util.Scanner;
 
-public class Model{
+public class Model implements Modelable{
 
-	private View view;
+	private Viewable view;
 	private ArrayList<Properties> inventory;
 	private ArrayList<Properties> currentProperties;
 	private static Formatter output;
@@ -27,7 +27,7 @@ public class Model{
 		loadInventory();
 	}
 
-	public void setView(View view){
+	public void setView(Viewable view){
 		this.view = view;
 	}
 

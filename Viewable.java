@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public interface Viewable {
 	
-	public void setModel(Model m);	
+	public void setModel(Modelable m);	
 	
 	public void requestInfoFromModel();
 	

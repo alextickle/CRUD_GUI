@@ -6,7 +6,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -18,9 +17,9 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
-public class View extends JFrame{
+public class GuiView extends JFrame implements Viewable{
 	private Controller controller;
-	private Model model;
+	private Modelable model;
 	private Command currentCommand;
 	private ArrayList<MediaItem> queryResults;
 	private final JButton[] buttons;
@@ -51,6 +50,7 @@ public class View extends JFrame{
 	private final JPanel createPanel;
 	private final JTextField createTitleField;
 	private final JTextField createArtistField;
+	private JLabel createMessage;
 	private final JComboBox<String> createTypeField;
 	
 	// results panel
@@ -88,7 +88,7 @@ public class View extends JFrame{
 	private JLabel itemDeletedArtist;
 	private JLabel itemDeletedType;
 
-	public View(Controller controller){
+	public GuiView(Controller controller){
 		super("CRUD Application");
 		this.controller = controller;
 		this.queryResults = new ArrayList<MediaItem>();
@@ -108,6 +108,7 @@ public class View extends JFrame{
 		createButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
+				// if at home panel, go to create panel
 				if (state == State.HOME){
 					hideAllComponents();
 					createButton.setVisible(true);
@@ -115,9 +116,19 @@ public class View extends JFrame{
 					createPanel.setVisible(true);
 					state = State.CREATE;
 				}
+				// send CREATE request to controller
 				else {
-					currentCommand = getCreateInfo();
-					controller.requestModelUpdate(currentCommand);
+					// check if all fields are filled
+					if (createTitleField.getText() != "" && 
+						createArtistField.getText() != "" &&
+						createTypeField.getSelectedIndex() != 0){
+						currentCommand = getCreateInfo();
+						createMessage.setText("");
+						controller.requestModelUpdate(currentCommand);
+					}
+					else {
+						createMessage.setText("   Please enter a value in each field to continue.");
+					}
 				}
 			}
 		});
@@ -128,6 +139,7 @@ public class View extends JFrame{
 		searchButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
+				// if at home panel, go to search panel
 				if (state == State.HOME){
 					hideAllComponents();
 					searchButton.setVisible(true);
@@ -135,7 +147,8 @@ public class View extends JFrame{
 					searchPanel.setVisible(true);
 					state = State.SEARCH;
 				}
-				else if (state == State.SEARCH) {
+				// send SEARCH request to controller
+				else {
 					currentCommand = getSearchInfo();
 					controller.requestModelUpdate(currentCommand);
 				}
@@ -148,8 +161,9 @@ public class View extends JFrame{
 		updateButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				if (resultsList.getSelectedIndex() > -1){
-					if (state == State.RESULTS){
+				// if at results update panel, check for selection and go to update panel
+				if (state == State.RESULTS){
+					if (resultsList.getSelectedIndex() > -1){
 						String infoStr = resultsArray[resultsList.getSelectedIndex()];
 						selectedInfoArray = infoStr.split(" - ");
 						updateTitleField.setText(selectedInfoArray[2]);
@@ -161,12 +175,13 @@ public class View extends JFrame{
 						state = State.UPDATE;
 					}
 					else {
-						currentCommand = getUpdateInfo();
-						controller.requestModelUpdate(currentCommand);
+						resultsMessage.setText("   Please select an item to update.");
 					}
 				}
+				// if at update panel, send UPDATE request to controller
 				else {
-					resultsMessage.setText("Please select an item to update.");
+					currentCommand = getUpdateInfo();
+					controller.requestModelUpdate(currentCommand);
 				}
 			}
 		});
@@ -178,12 +193,13 @@ public class View extends JFrame{
 		deleteButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
+				// if item selected then send DELETE request to controller
 				if (resultsList.getSelectedIndex() > -1){
 					currentCommand = getDeleteInfo();
 					controller.requestModelUpdate(currentCommand);
 				}
 				else {
-					resultsMessage.setText("Please select an item to delete.");
+					resultsMessage.setText("   Please select an item to delete.");
 				}
 			}
 		});
@@ -194,6 +210,7 @@ public class View extends JFrame{
 		cancelButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
+				// return to home panel
 				hideAllComponents();
 				createButton.setVisible(true);
 				searchButton.setVisible(true);
@@ -202,6 +219,7 @@ public class View extends JFrame{
 			}
 		});
 		
+		// navigate to home if item created or results panel if updated/deleted
 		continueButton = new JButton("Continue");
 		continueButton.setVisible(false);
 		buttons[5] = continueButton;
@@ -231,12 +249,6 @@ public class View extends JFrame{
 						break;
 					case ITEM_UPDATED:
 						hideAllComponents();
-						MediaItem item = currentCommand.getMediaItem();
-						String updated = String.format("%s - %s - %s - %s",
-							selectedInfoArray[0],
-							selectedInfoArray[1],
-							updateTitleField.getText() == "" ? item.getTitle() : updateTitleField.getText(),
-							updateArtistField.getText() == "" ? item.getArtist() : updateTitleField.getText());
 						resultsArray = stringifyQueryResults();
 						resultsList.setListData(resultsArray);
 						resultsPanel.setVisible(true);
@@ -269,8 +281,8 @@ public class View extends JFrame{
 		// initialize home panel
 		homePanel = new JPanel();
 		homePanel.setLayout(new GridLayout(2, 1));
-		homePanel.add(new JLabel("Welcome to CRUD.", SwingConstants.CENTER));
-		homePanel.add(new JLabel("Please make a selection.", SwingConstants.CENTER));
+		homePanel.add(new JLabel("WELCOME", SwingConstants.CENTER));
+		homePanel.add(new JLabel("Please make a selection below.", SwingConstants.CENTER));
 		homePanel.setVisible(true);
 		homePanel.setPreferredSize(preferredPanelDimension);
 		contentPanel.add(homePanel);
@@ -278,16 +290,21 @@ public class View extends JFrame{
 		
 		// initialize create panel
 		createPanel = new JPanel();
-		createPanel.setLayout(new GridLayout(8, 1));
+		createPanel.setLayout(new GridLayout(9, 1));
 		createPanel.add(new JLabel("CREATE ITEM", SwingConstants.CENTER));
+		createMessage = new JLabel(" ");
+		createPanel.add(createMessage);
 		createPanel.add(new JLabel("   Title:"));
 		createTitleField = new JTextField();
+		createTitleField.setText("");
 		createPanel.add(createTitleField);
 		createPanel.add(new JLabel("   Artist:"));
 		createArtistField = new JTextField();
+		createArtistField.setText("");
 		createPanel.add(createArtistField);
 		createPanel.add(new JLabel("   Media type:"));
 		createTypeField = new JComboBox<String>(this.mediaTypes);
+		createTypeField.setSelectedItem(0);
 		createTypeField.setMaximumRowCount(4);
 		createPanel.add(createTypeField);
 		createPanel.setVisible(false);
@@ -302,9 +319,11 @@ public class View extends JFrame{
 		updatePanel.add(new JLabel("   Title:"));
 		updateTitleField = new JTextField();
 		updatePanel.add(updateTitleField);
+		updateTitleField.setText("");
 		updatePanel.add(new JLabel("   Artist:"));
 		updateArtistField = new JTextField();
 		updatePanel.add(updateArtistField);
+		updateArtistField.setText("");
 		updatePanel.setVisible(false);
 		updatePanel.setPreferredSize(preferredPanelDimension);
 		contentPanel.add(updatePanel);
@@ -318,15 +337,19 @@ public class View extends JFrame{
 		searchPanel.add(new JLabel("   Id:"));
 		searchIdField = new JTextField();
 		searchPanel.add(searchIdField);
+		searchIdField.setText("");
 		searchPanel.add(new JLabel("   Title:"));
 		searchTitleField = new JTextField();
+		searchTitleField.setText("");
 		searchPanel.add(searchTitleField);
 		searchPanel.add(new JLabel("   Artist:"));
 		searchArtistField = new JTextField();
+		searchArtistField.setText("");
 		searchPanel.add(searchArtistField);
 		searchPanel.add(new JLabel("   Media type:"));
 		searchTypeField = new JComboBox<String>(this.mediaTypes);
 		searchTypeField.setMaximumRowCount(4);
+		searchTypeField.setSelectedIndex(0);
 		searchPanel.add(searchTypeField);
 		searchPanel.setVisible(false);
 		searchPanel.setPreferredSize(preferredPanelDimension);
@@ -364,7 +387,7 @@ public class View extends JFrame{
 		itemCreatedPanel.add(new JLabel("   Title:"));
 		itemCreatedTitle = new JLabel("   (Title)");
 		itemCreatedPanel.add(itemCreatedTitle);
-		itemCreatedPanel.add(new JLabel("  Artist:"));
+		itemCreatedPanel.add(new JLabel("   Artist:"));
 		itemCreatedArtist = new JLabel("   (Artist)");
 		itemCreatedPanel.add(itemCreatedArtist);
 		itemCreatedPanel.add(new JLabel("   Media type:"));
@@ -413,6 +436,18 @@ public class View extends JFrame{
 	
 	}
 	
+	public void setModel(Modelable m) {
+		this.model = m;
+	}
+	
+	// opens view as a JFrame
+	public void start(){
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setSize(500, 400);
+		this.setVisible(true);
+	}
+	
+	// used to reset panels after each button click
 	public void hideAllComponents(){
 		for (int i = 0; i < buttons.length; i++){
 			buttons[i].setVisible(false);
@@ -422,10 +457,8 @@ public class View extends JFrame{
 		}
 	}
 	
-	public void setModel(Model m) {
-		this.model = m;
-	}
-	
+	// parse create info from panel and package it
+	// into a command object of type CREATE
 	public Command getCreateInfo(){
 		Command createCommand = new Command(Command.Type.CREATE);
 		String title = createTitleField.getText();
@@ -447,6 +480,8 @@ public class View extends JFrame{
 		return createCommand;
 	}
 	
+	// parse search info from panel and package it
+	// into a command object of type SEARCH
 	public Command getSearchInfo(){
 		Command searchCommand = new Command(Command.Type.SEARCH);
 		String id = searchIdField.getText();
@@ -484,6 +519,8 @@ public class View extends JFrame{
 		return searchCommand;
 	}
 	
+	// parse update info from panel and package it
+	// into a command object of type UPDATE
 	public Command getUpdateInfo(){
 		Command updateCommand = new Command(Command.Type.UPDATE);
 		String title = updateTitleField.getText();
@@ -503,11 +540,12 @@ public class View extends JFrame{
 				break;
 		}
 		int index = resultsList.getSelectedIndex();
-		System.out.println("index: " + index);
 		updateCommand.setQueryIndex(index);
 		return updateCommand;
 	}
 	
+	// parse delete info from panel and package it
+	// into a command object of type DELETE
 	public Command getDeleteInfo(){
 		Command deleteCommand = new Command(Command.Type.DELETE);
 		int index = resultsList.getSelectedIndex();
@@ -516,6 +554,7 @@ public class View extends JFrame{
 		return deleteCommand;
 	}
 	
+	// converts queryResults list into string array for use with JLists
 	public String[] stringifyQueryResults(){
 		String[] toReturn = new String[queryResults.size()];
 		for (int i = 0; i < queryResults.size(); i++){
@@ -528,25 +567,6 @@ public class View extends JFrame{
 		return toReturn;
 	}
 	
-	public String[] removeDeletedItem(int index){
-		String[] toReturn = new String[resultsArray.length - 1];
-		int j = 0;
-		for (int i = 0; i < resultsArray.length; i++){
-			if (i != index){
-				toReturn[j] = resultsArray[i];
-				j++;
-			}
-		}
-		return toReturn;
-	}
-	
-	public void start(){
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setSize(500, 400);
-		this.setVisible(true);
-	}
-	
-	
 	// view receives alert from model and asks
 	// model for the current mediaItems (7)
 	public void requestInfoFromModel(){
@@ -554,15 +574,15 @@ public class View extends JFrame{
 	}
 	
 	// view receives info from model and updates self (9)
-	// if command is type SEARCH, view calls updateOrDelete
 	public void updateSelf(ArrayList<MediaItem> currentItems){
 		MediaItem item = currentCommand.getMediaItem();
 		switch (currentCommand.getType()){
 			case CREATE:
-				itemCreatedTitle.setText(item.getTitle());
-				itemCreatedArtist.setText(item.getArtist());
-				itemCreatedType.setText(item.getMediaType());
+				itemCreatedTitle.setText("   " + item.getTitle());
+				itemCreatedArtist.setText("   " + item.getArtist());
+				itemCreatedType.setText("   " + item.getMediaType());
 				hideAllComponents();
+				createTypeField.setSelectedIndex(0);
 				continueButton.setVisible(true);
 				itemCreatedPanel.setVisible(true);
 				state = State.ITEM_CREATED;
@@ -574,6 +594,8 @@ public class View extends JFrame{
 					deleteButton.setVisible(true);
 					updateButton.setVisible(true);
 					resultsMessage.setText("No items matched your search.");
+					resultsArray = new String[0];
+					resultsList.setListData(resultsArray);
 					resultsPanel.setVisible(true);
 					state = State.RESULTS;
 					queryResults.clear();
@@ -590,14 +612,15 @@ public class View extends JFrame{
 					resultsPanel.setVisible(true);
 					state = State.RESULTS;
 				}
+				searchTypeField.setSelectedIndex(0);
 				break;
 			case UPDATE:
 				queryResults = currentItems;
 				hideAllComponents();
 				continueButton.setVisible(true);
-				itemUpdatedTitle.setText(item.getTitle());
-				itemUpdatedArtist.setText(item.getArtist());
-				itemUpdatedType.setText(item.getMediaType());
+				itemUpdatedTitle.setText("   " + item.getTitle());
+				itemUpdatedArtist.setText("   " + item.getArtist());
+				itemUpdatedType.setText("   " + item.getMediaType());
 				itemUpdatedPanel.setVisible(true);
 				state = State.ITEM_UPDATED;
 				break;
@@ -605,9 +628,9 @@ public class View extends JFrame{
 				queryResults = currentItems;
 				hideAllComponents();
 				continueButton.setVisible(true);
-				itemDeletedTitle.setText(item.getTitle());
-				itemDeletedArtist.setText(item.getArtist());
-				itemDeletedType.setText(item.getMediaType());
+				itemDeletedTitle.setText("   " + item.getTitle());
+				itemDeletedArtist.setText("   " + item.getArtist());
+				itemDeletedType.setText("   " + item.getMediaType());
 				itemDeletedPanel.setVisible(true);
 				state = State.ITEM_DELETED;
 				break;
@@ -615,14 +638,14 @@ public class View extends JFrame{
 	}
 	
 	// FOR DEBUGGING ONLY
-		public void logCommand(Command command){
-			MediaItem mediaItem = command.getMediaItem();
-			System.out.println("-------------------------------");
-			System.out.println("Command Type: " + command.getType());
-			System.out.println("Title: " + mediaItem.getTitle());
-			System.out.println("Artist: " + mediaItem.getArtist());
-			System.out.println("Id: " + mediaItem.getId());
-			System.out.println("Media Type: " + mediaItem.getMediaType());
-			System.out.println("-------------------------------");
-		}
+	public void logCommand(Command command){
+		MediaItem mediaItem = command.getMediaItem();
+		System.out.println("-------------------------------");
+		System.out.println("Command Type: " + command.getType());
+		System.out.println("Title: " + mediaItem.getTitle());
+		System.out.println("Artist: " + mediaItem.getArtist());
+		System.out.println("Id: " + mediaItem.getId());
+		System.out.println("Media Type: " + mediaItem.getMediaType());
+		System.out.println("-------------------------------");
+	}
 }
