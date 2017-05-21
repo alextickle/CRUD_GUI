@@ -75,7 +75,8 @@ public class Model{
 				currentProperties = results;
 				break;
 			case UPDATE:
-				Properties recordToUpdate = currentProperties.get(command.getQueryIndex() - 1);
+				System.out.println("command query index: " + command.getQueryIndex());
+				Properties recordToUpdate = currentProperties.get(command.getQueryIndex());
 				String stringToUpdate = item.getTitle();
 				if (!stringToUpdate.equals("")){
 					recordToUpdate.setProperty("title", stringToUpdate);
@@ -88,7 +89,8 @@ public class Model{
 				currentProperties.add(recordToUpdate);
 				break;
 			case DELETE:
-				Properties recordToDelete = currentProperties.get(command.getQueryIndex() - 1);
+				System.out.println("command query index: " + command.getQueryIndex());
+				Properties recordToDelete = currentProperties.get(command.getQueryIndex());
 				currentProperties = new ArrayList<Properties>();
 				currentProperties.add(recordToDelete);
 				deleteItem(recordToDelete.getProperty("id"));

@@ -26,7 +26,7 @@ public class View extends JFrame{
 	private final JButton[] buttons;
 	private final JPanel[] panels;
 	private final String[] mediaTypes;
-	private String[] resultsArray = {"A", "B", "C", "D", "E", "F"};
+	private String[] resultsArray;
 	private final Dimension preferredPanelDimension;
 	private String[] selectedInfoArray;
 	public static enum State {
@@ -58,7 +58,6 @@ public class View extends JFrame{
 	private JLabel resultsMessage;
 	private final JList<String> resultsList;
 	
-
 	// search panel
 	private final JPanel searchPanel;
 	private final JTextField searchIdField;
@@ -124,7 +123,7 @@ public class View extends JFrame{
 		});
 		
 		searchButton = new JButton("Search");
-		searchButton.setVisible(false);
+		searchButton.setVisible(true);
 		buttons[1] = searchButton;
 		searchButton.addActionListener(new ActionListener(){
 			@Override
@@ -149,20 +148,25 @@ public class View extends JFrame{
 		updateButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				if (state == State.RESULTS){
-					String infoStr = resultsArray[resultsList.getSelectedIndex()];
-					selectedInfoArray = infoStr.split(" - ");
-					updateTitleField.setText(selectedInfoArray[2]);
-					updateArtistField.setText(selectedInfoArray[3]);
-					hideAllComponents();
-					updateButton.setVisible(true);
-					cancelButton.setVisible(true);
-					updatePanel.setVisible(true);
-					state = State.UPDATE;
+				if (resultsList.getSelectedIndex() > -1){
+					if (state == State.RESULTS){
+						String infoStr = resultsArray[resultsList.getSelectedIndex()];
+						selectedInfoArray = infoStr.split(" - ");
+						updateTitleField.setText(selectedInfoArray[2]);
+						updateArtistField.setText(selectedInfoArray[3]);
+						hideAllComponents();
+						updateButton.setVisible(true);
+						cancelButton.setVisible(true);
+						updatePanel.setVisible(true);
+						state = State.UPDATE;
+					}
+					else {
+						currentCommand = getUpdateInfo();
+						controller.requestModelUpdate(currentCommand);
+					}
 				}
 				else {
-					currentCommand = getUpdateInfo();
-					controller.requestModelUpdate(currentCommand);
+					resultsMessage.setText("Please select an item to update.");
 				}
 			}
 		});
@@ -174,8 +178,13 @@ public class View extends JFrame{
 		deleteButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				currentCommand = getDeleteInfo();
-				controller.requestModelUpdate(currentCommand);
+				if (resultsList.getSelectedIndex() > -1){
+					currentCommand = getDeleteInfo();
+					controller.requestModelUpdate(currentCommand);
+				}
+				else {
+					resultsMessage.setText("Please select an item to delete.");
+				}
 			}
 		});
 		
@@ -206,8 +215,13 @@ public class View extends JFrame{
 						createButton.setVisible(true);
 						searchButton.setVisible(true);
 						state = State.HOME;
+						createTitleField.setText("");
+						createArtistField.setText("");
 						break;
 					case ITEM_DELETED:
+						resultsArray = removeDeletedItem(resultsList.getSelectedIndex());
+						resultsList.setListData(resultsArray);
+						resultsMessage.setText(resultsArray.length + " item(s) found:");
 						hideAllComponents();
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
@@ -217,11 +231,21 @@ public class View extends JFrame{
 						break;
 					case ITEM_UPDATED:
 						hideAllComponents();
+						MediaItem item = currentCommand.getMediaItem();
+						String updated = String.format("%s - %s - %s - %s",
+							selectedInfoArray[0],
+							selectedInfoArray[1],
+							updateTitleField.getText() == "" ? item.getTitle() : updateTitleField.getText(),
+							updateArtistField.getText() == "" ? item.getArtist() : updateTitleField.getText());
+						resultsArray[resultsList.getSelectedIndex()] = updated;
+						resultsList.setListData(resultsArray);
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
 						updateButton.setVisible(true);
 						cancelButton.setVisible(true);
 						state = State.RESULTS;
+						updateTitleField.setText("");
+						updateArtistField.setText("");
 						break;
 					default:
 						break;
@@ -316,7 +340,7 @@ public class View extends JFrame{
 		resultsPanel.add(new JLabel("RESULTS", SwingConstants.CENTER));
 		resultsMessage = new JLabel("");
 		resultsPanel.add(resultsMessage);
-		resultsList = new JList<String>(resultsArray);
+		resultsList = new JList<String>(new String[1]);
 		resultsList.setVisibleRowCount(20);
 	    resultsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	    resultsPanel.add(new JScrollPane(resultsList));
@@ -412,8 +436,6 @@ public class View extends JFrame{
 			default:
 				break;
 		}
-		createTitleField.setText("");
-		createArtistField.setText("");
 		return createCommand;
 	}
 	
@@ -422,7 +444,10 @@ public class View extends JFrame{
 		String id = searchIdField.getText();
 		String title = searchTitleField.getText();
 		String artist = searchArtistField.getText();
-		String mediaType = mediaTypes[searchTypeField.getSelectedIndex()];
+		String mediaType = "";
+		if (searchTypeField.getSelectedIndex() > -1){
+			mediaType = mediaTypes[searchTypeField.getSelectedIndex()];
+		}
 		switch (mediaType){
 			case "CD":
 				CD cd = new CD(title, artist);
@@ -440,6 +465,9 @@ public class View extends JFrame{
 				searchCommand.setMediaItem(book);
 				break;
 			default:
+				MediaItem item = new MediaItem(title, artist);
+				item.setId(id);
+				searchCommand.setMediaItem(item);
 				break;
 		}
 		searchIdField.setText("");
@@ -449,7 +477,7 @@ public class View extends JFrame{
 	}
 	
 	public Command getUpdateInfo(){
-		Command updateCommand = new Command(Command.Type.CREATE);
+		Command updateCommand = new Command(Command.Type.UPDATE);
 		String title = updateTitleField.getText();
 		String artist = updateArtistField.getText();
 		String mediaType = selectedInfoArray[1];
@@ -466,8 +494,9 @@ public class View extends JFrame{
 			default:
 				break;
 		}
-		updateTitleField.setText("");
-		updateArtistField.setText("");
+		int index = resultsList.getSelectedIndex();
+		System.out.println("index: " + index);
+		updateCommand.setQueryIndex(index);
 		return updateCommand;
 	}
 	
@@ -487,6 +516,18 @@ public class View extends JFrame{
 				queryResults.get(i).getMediaType(),
 				queryResults.get(i).getTitle(),
 				queryResults.get(i).getArtist());
+		}
+		return toReturn;
+	}
+	
+	public String[] removeDeletedItem(int index){
+		String[] toReturn = new String[resultsArray.length - 1];
+		int j = 0;
+		for (int i = 0; i < resultsArray.length; i++){
+			if (i != index){
+				toReturn[j] = resultsArray[i];
+				j++;
+			}
 		}
 		return toReturn;
 	}
@@ -535,8 +576,9 @@ public class View extends JFrame{
 					cancelButton.setVisible(true);
 					deleteButton.setVisible(true);
 					updateButton.setVisible(true);
-					resultsMessage.setText(currentItems.size() + " item(s) found:");
 					resultsArray = stringifyQueryResults();
+					resultsList.setListData(resultsArray);
+					resultsMessage.setText(resultsArray.length + " item(s) found:");
 					resultsPanel.setVisible(true);
 					state = State.RESULTS;
 				}
@@ -560,4 +602,16 @@ public class View extends JFrame{
 				break;
 		}
 	}
+	
+	// FOR DEBUGGING ONLY
+		public void logCommand(Command command){
+			MediaItem mediaItem = command.getMediaItem();
+			System.out.println("-------------------------------");
+			System.out.println("Command Type: " + command.getType());
+			System.out.println("Title: " + mediaItem.getTitle());
+			System.out.println("Artist: " + mediaItem.getArtist());
+			System.out.println("Id: " + mediaItem.getId());
+			System.out.println("Media Type: " + mediaItem.getMediaType());
+			System.out.println("-------------------------------");
+		}
 }
