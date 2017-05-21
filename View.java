@@ -29,6 +29,7 @@ public class View extends JFrame{
 	private final String[] mediaTypes;
 	private final String[] resultsArray = {"A", "B", "C", "D", "E", "F"};
 	private final Dimension preferredPanelDimension;
+	private String[] selectedInfoArray;
 	public static enum State {
 		HOME, CREATE, UPDATE, DELETE, SEARCH, 
 		RESULTS, ITEM_CREATED, ITEM_DELETED,
@@ -87,8 +88,9 @@ public class View extends JFrame{
 	private JLabel itemDeletedArtist;
 	private JLabel itemDeletedType;
 
-	public View(){
+	public View(Controller controller){
 		super("CRUD Application");
+		this.controller = controller;
 		this.queryResults = new ArrayList<MediaItem>();
 		String[] temp = {"", "CD", "DVD", "Book"};
 		this.mediaTypes = temp;
@@ -106,17 +108,17 @@ public class View extends JFrame{
 		createButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				System.out.println("createButton pressed");
 				if (state == State.HOME){
-					hideAll();
+					hideAllComponents();
 					createButton.setVisible(true);
 					cancelButton.setVisible(true);
 					createPanel.setVisible(true);
 					state = State.CREATE;
 				}
 				else {
-					// TODO - createItem
-					hideAll();
+					currentCommand = getCreateInfo();
+					controller.requestModelUpdate(currentCommand);
+					hideAllComponents();
 					continueButton.setVisible(true);
 					itemCreatedPanel.setVisible(true);
 					state = State.ITEM_CREATED;
@@ -130,16 +132,15 @@ public class View extends JFrame{
 		searchButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				System.out.println("searchButton pressed");
 				if (state == State.HOME){
-					hideAll();
+					hideAllComponents();
 					searchButton.setVisible(true);
 					cancelButton.setVisible(true);
 					searchPanel.setVisible(true);
 					state = State.SEARCH;
 				}
 				else if (state == State.SEARCH) {
-					hideAll();
+					hideAllComponents();
 					cancelButton.setVisible(true);
 					deleteButton.setVisible(true);
 					updateButton.setVisible(true);
@@ -156,9 +157,12 @@ public class View extends JFrame{
 		updateButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				System.out.println("updateButton pressed");
 				if (state == State.RESULTS){
-					hideAll();
+					String infoStr = resultsArray[resultsList.getSelectedIndex()];
+					selectedInfoArray = infoStr.split(" - ");
+					updateTitleField.setText(selectedInfoArray[2]);
+					updateArtistField.setText(selectedInfoArray[3]);
+					hideAllComponents();
 					updateButton.setVisible(true);
 					cancelButton.setVisible(true);
 					updatePanel.setVisible(true);
@@ -166,7 +170,7 @@ public class View extends JFrame{
 				}
 				else {
 					// TODO - updateItem
-					hideAll();
+					hideAllComponents();
 					continueButton.setVisible(true);
 					itemUpdatedPanel.setVisible(true);
 					state = State.ITEM_UPDATED;
@@ -181,9 +185,8 @@ public class View extends JFrame{
 		deleteButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				System.out.println("deleteButton pressed");
 				// TODO - deleteItem
-				hideAll();
+				hideAllComponents();
 				continueButton.setVisible(true);
 				itemDeletedPanel.setVisible(true);
 				state = State.ITEM_DELETED;
@@ -196,8 +199,7 @@ public class View extends JFrame{
 		cancelButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				System.out.println("cancelButton pressed");
-				hideAll();
+				hideAllComponents();
 				createButton.setVisible(true);
 				searchButton.setVisible(true);
 				homePanel.setVisible(true);
@@ -211,17 +213,16 @@ public class View extends JFrame{
 		continueButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				System.out.println("continueButton pressed");
 				switch(state){
 					case ITEM_CREATED:
-						hideAll();
+						hideAllComponents();
 						homePanel.setVisible(true);
 						createButton.setVisible(true);
 						searchButton.setVisible(true);
 						state = State.HOME;
 						break;
 					case ITEM_DELETED:
-						hideAll();
+						hideAllComponents();
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
 						updateButton.setVisible(true);
@@ -229,7 +230,7 @@ public class View extends JFrame{
 						state = State.RESULTS;
 						break;
 					case ITEM_UPDATED:
-						hideAll();
+						hideAllComponents();
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
 						updateButton.setVisible(true);
@@ -392,13 +393,200 @@ public class View extends JFrame{
 	
 	}
 	
-	public void hideAll(){
-		System.out.println("in hideAll");
+	public void hideAllComponents(){
 		for (int i = 0; i < buttons.length; i++){
 			buttons[i].setVisible(false);
 		}
 		for (int j = 0; j < panels.length; j++){
 			panels[j].setVisible(false);
+		}
+	}
+	
+	public void setModel(Model m) {
+		this.model = m;
+	}
+	
+	public Command getCreateInfo(){
+		Command createCommand = new Command(Command.Type.CREATE);
+		String title = createTitleField.getText();
+		String artist = createArtistField.getText();
+		String mediaType = mediaTypes[createTypeField.getSelectedIndex()];
+		switch (mediaType){
+			case "CD":
+				createCommand.setMediaItem(new CD(title, artist));
+				break;
+			case "DVD":
+				createCommand.setMediaItem(new DVD(title, artist));
+				break;
+			case "Book":
+				createCommand.setMediaItem(new Book(title, artist));
+				break;
+			default:
+				break;
+		}
+		createTitleField.setText("");
+		createArtistField.setText("");
+		return createCommand;
+	}
+	
+	public Command getSearchInfo(){
+		Command searchCommand = new Command(Command.Type.SEARCH);
+		String id = searchIdField.getText();
+		String title = searchTitleField.getText();
+		String artist = searchArtistField.getText();
+		String mediaType = mediaTypes[searchTypeField.getSelectedIndex()];
+		switch (mediaType){
+			case "CD":
+				CD cd = new CD(title, artist);
+				cd.setId(id);
+				searchCommand.setMediaItem(cd);
+				break;
+			case "DVD":
+				DVD dvd = new DVD(title, artist);
+				dvd.setId(id);
+				searchCommand.setMediaItem(dvd);
+				break;
+			case "Book":
+				Book book = new Book(title, artist);
+				book.setId(id);
+				searchCommand.setMediaItem(book);
+				break;
+			default:
+				break;
+		}
+		searchIdField.setText("");
+		searchTitleField.setText("");
+		searchArtistField.setText("");
+		return searchCommand;
+	}
+	
+	public Command getUpdateInfo(){
+		Command updateCommand = new Command(Command.Type.CREATE);
+		String title = updateTitleField.getText();
+		String artist = updateArtistField.getText();
+		String mediaType = selectedInfoArray[1];
+		switch (mediaType){
+			case "CD":
+				updateCommand.setMediaItem(new CD(title, artist));
+				break;
+			case "DVD":
+				updateCommand.setMediaItem(new DVD(title, artist));
+				break;
+			case "Book":
+				updateCommand.setMediaItem(new Book(title, artist));
+				break;
+			default:
+				break;
+		}
+		updateTitleField.setText("");
+		updateArtistField.setText("");
+		return updateCommand;
+	}
+	
+	//////////////////////////////////////////////////////////
+	public Command getDeleteInfo(){
+		Command deleteCommand = new Command(Command.Type.DELETE);
+		String toDelete = resultsList.getSelectedIndex();
+		String title = updateTitleField.getText();
+		String artist = updateArtistField.getText();
+		String mediaType = selectedInfoArray[1];
+		switch (mediaType){
+			case "CD":
+				updateCommand.setMediaItem(new CD(title, artist));
+				break;
+			case "DVD":
+				updateCommand.setMediaItem(new DVD(title, artist));
+				break;
+			case "Book":
+				updateCommand.setMediaItem(new Book(title, artist));
+				break;
+			default:
+				break;
+		}
+		updateTitleField.setText("");
+		updateArtistField.setText("");
+		return updateCommand;
+	}
+	
+	public String[] stringifyQueryResults(){
+		String[] toReturn = new String[queryResults.size()];
+		for (int i = 0; i < queryResults.size(); i++){
+			toReturn[i] = String.format("%s - %s - %s - %s",
+				queryResults.get(i).getId(),
+				queryResults.get(i).getMediaType(),
+				queryResults.get(i).getTitle(),
+				queryResults.get(i).getArtist());
+		}
+		return toReturn;
+	}
+	
+	// view receives alert from model and asks
+	// model for the current mediaItems (7)
+	public void requestInfoFromModel(){
+		model.sendUpdatedInfoToView();
+	}
+	
+	// view receives info from model and updates self (9)
+	// if command is type SEARCH, view calls updateOrDelete
+	public void updateSelf(ArrayList<MediaItem> currentItems){
+		MediaItem item = currentCommand.getMediaItem();
+		switch (currentCommand.getType()){
+			case CREATE:
+				System.out.println("Item created:");
+				System.out.printf("Media type: %s\nTitle: %s\nArtist: %s\n",
+						item.getMediaType(),
+						item.getTitle(),
+						item.getArtist());
+				break;
+			case SEARCH:
+				if (currentItems.size() == 0){
+					System.out.println("No items matched your search criteria.");
+					queryResults.clear();
+				}
+				else {
+					System.out.println(currentItems.size() + " item(s) found:");
+					for (int i = 0; i < currentItems.size(); i++){
+						System.out.printf("Media type: %s\nTitle: %s\nArtist: %s\n\n",
+								currentItems.get(i).getMediaType(),
+								currentItems.get(i).getTitle(),
+								currentItems.get(i).getArtist());
+					}
+					queryResults = currentItems;
+				}
+				break;
+			case UPDATE:
+				System.out.println("Item updated:");
+				System.out.printf("Media type: %s\nTitle: %s\nArtist: %s\n",
+						item.getMediaType(),
+						item.getTitle(),
+						item.getArtist());
+				break;
+			case DELETE:
+				System.out.println("Item deleted:");
+				System.out.printf("Media type: %s\nTitle: %s\nArtist: %s\n",
+						item.getMediaType(),
+						item.getTitle(),
+						item.getArtist());
+				break;
+		}
+
+		if (currentCommand.getType() == Command.Type.SEARCH){
+			if (currentItems.size() == 0){
+				start();
+			}
+			else {
+				int request = deleteOrUpdate();
+				handleUserRequest(request);
+			}
+		}
+		else {
+			int request = createOrSearch();
+			if (request == 3){
+				System.out.println("Session terminated.");
+			}
+			else {
+				handleUserRequest(request);
+			}
 		}
 	}
 }
