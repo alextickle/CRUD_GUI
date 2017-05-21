@@ -1,4 +1,4 @@
-currentId: 46
+currentId: 47
 1_CD_Axis of Love_Jimi Hendrix
 4_CD_Kid A_Radiohead
 2_Book_Lord of the Rings_J.R.R. Tolkien
@@ -22,7 +22,6 @@ currentId: 46
 25_DVD_Manda Bala_Jason Kohn
 26_DVD_Cidade de Deus_Fernando Meirelles
 27_DVD_13 Monkeys_Terry Gilliam
-28_DVD_Brazil_Terry Gilliam
 29_Book_Burmese Days_George Orwell
 30_Book_The Doors of Perception_Aldous Huxley
 31_Book_La pensee sauvage_Claude Levi-Strauss
@@ -38,3 +37,4 @@ currentId: 46
 43_CD_Blonde on Blonde_Bob Dylan
 44_Book_Smune_Frank Herbert
 45_Book_The Technological Society_Jacques Ellul
+46_CD_Sleeping Through the War_All Them Witches
