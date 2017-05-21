@@ -10,8 +10,6 @@ public class CrudGui {
 		
 		model.setView(view);
 		view.setModel(model);
-		view.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		view.setSize(500, 400);
-		view.setVisible(true);
+		view.start();
 	}
 }

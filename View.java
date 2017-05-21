@@ -21,13 +21,12 @@ import javax.swing.SwingConstants;
 public class View extends JFrame{
 	private Controller controller;
 	private Model model;
-	private int input;
 	private Command currentCommand;
 	private ArrayList<MediaItem> queryResults;
 	private final JButton[] buttons;
 	private final JPanel[] panels;
 	private final String[] mediaTypes;
-	private final String[] resultsArray = {"A", "B", "C", "D", "E", "F"};
+	private String[] resultsArray = {"A", "B", "C", "D", "E", "F"};
 	private final Dimension preferredPanelDimension;
 	private String[] selectedInfoArray;
 	public static enum State {
@@ -56,7 +55,9 @@ public class View extends JFrame{
 	
 	// results panel
 	private final JPanel resultsPanel;
-	private final JList resultsList;
+	private JLabel resultsMessage;
+	private final JList<String> resultsList;
+	
 
 	// search panel
 	private final JPanel searchPanel;
@@ -118,10 +119,6 @@ public class View extends JFrame{
 				else {
 					currentCommand = getCreateInfo();
 					controller.requestModelUpdate(currentCommand);
-					hideAllComponents();
-					continueButton.setVisible(true);
-					itemCreatedPanel.setVisible(true);
-					state = State.ITEM_CREATED;
 				}
 			}
 		});
@@ -140,13 +137,8 @@ public class View extends JFrame{
 					state = State.SEARCH;
 				}
 				else if (state == State.SEARCH) {
-					hideAllComponents();
-					cancelButton.setVisible(true);
-					deleteButton.setVisible(true);
-					updateButton.setVisible(true);
-					resultsPanel.setVisible(true);
-					state = State.RESULTS;
-					// TODO - searchItem
+					currentCommand = getSearchInfo();
+					controller.requestModelUpdate(currentCommand);
 				}
 			}
 		});
@@ -169,11 +161,8 @@ public class View extends JFrame{
 					state = State.UPDATE;
 				}
 				else {
-					// TODO - updateItem
-					hideAllComponents();
-					continueButton.setVisible(true);
-					itemUpdatedPanel.setVisible(true);
-					state = State.ITEM_UPDATED;
+					currentCommand = getUpdateInfo();
+					controller.requestModelUpdate(currentCommand);
 				}
 			}
 		});
@@ -185,11 +174,8 @@ public class View extends JFrame{
 		deleteButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				// TODO - deleteItem
-				hideAllComponents();
-				continueButton.setVisible(true);
-				itemDeletedPanel.setVisible(true);
-				state = State.ITEM_DELETED;
+				currentCommand = getDeleteInfo();
+				controller.requestModelUpdate(currentCommand);
 			}
 		});
 		
@@ -326,8 +312,10 @@ public class View extends JFrame{
 		
 		// initialize results panel
 		resultsPanel = new JPanel();
-		resultsPanel.setLayout(new GridLayout(2,1));
+		resultsPanel.setLayout(new GridLayout(3,1));
 		resultsPanel.add(new JLabel("RESULTS", SwingConstants.CENTER));
+		resultsMessage = new JLabel("");
+		resultsPanel.add(resultsMessage);
 		resultsList = new JList<String>(resultsArray);
 		resultsList.setVisibleRowCount(20);
 	    resultsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -483,29 +471,12 @@ public class View extends JFrame{
 		return updateCommand;
 	}
 	
-	//////////////////////////////////////////////////////////
 	public Command getDeleteInfo(){
 		Command deleteCommand = new Command(Command.Type.DELETE);
-		String toDelete = resultsList.getSelectedIndex();
-		String title = updateTitleField.getText();
-		String artist = updateArtistField.getText();
-		String mediaType = selectedInfoArray[1];
-		switch (mediaType){
-			case "CD":
-				updateCommand.setMediaItem(new CD(title, artist));
-				break;
-			case "DVD":
-				updateCommand.setMediaItem(new DVD(title, artist));
-				break;
-			case "Book":
-				updateCommand.setMediaItem(new Book(title, artist));
-				break;
-			default:
-				break;
-		}
-		updateTitleField.setText("");
-		updateArtistField.setText("");
-		return updateCommand;
+		int index = resultsList.getSelectedIndex();
+		deleteCommand.setQueryIndex(index);
+		deleteCommand.setMediaItem(queryResults.get(index));
+		return deleteCommand;
 	}
 	
 	public String[] stringifyQueryResults(){
@@ -520,6 +491,13 @@ public class View extends JFrame{
 		return toReturn;
 	}
 	
+	public void start(){
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setSize(500, 400);
+		this.setVisible(true);
+	}
+	
+	
 	// view receives alert from model and asks
 	// model for the current mediaItems (7)
 	public void requestInfoFromModel(){
@@ -532,61 +510,54 @@ public class View extends JFrame{
 		MediaItem item = currentCommand.getMediaItem();
 		switch (currentCommand.getType()){
 			case CREATE:
-				System.out.println("Item created:");
-				System.out.printf("Media type: %s\nTitle: %s\nArtist: %s\n",
-						item.getMediaType(),
-						item.getTitle(),
-						item.getArtist());
+				itemCreatedTitle.setText(item.getTitle());
+				itemCreatedArtist.setText(item.getArtist());
+				itemCreatedType.setText(item.getMediaType());
+				hideAllComponents();
+				continueButton.setVisible(true);
+				itemCreatedPanel.setVisible(true);
+				state = State.ITEM_CREATED;
 				break;
 			case SEARCH:
 				if (currentItems.size() == 0){
-					System.out.println("No items matched your search criteria.");
+					hideAllComponents();
+					cancelButton.setVisible(true);
+					deleteButton.setVisible(true);
+					updateButton.setVisible(true);
+					resultsMessage.setText("No items matched your search.");
+					resultsPanel.setVisible(true);
+					state = State.RESULTS;
 					queryResults.clear();
 				}
 				else {
-					System.out.println(currentItems.size() + " item(s) found:");
-					for (int i = 0; i < currentItems.size(); i++){
-						System.out.printf("Media type: %s\nTitle: %s\nArtist: %s\n\n",
-								currentItems.get(i).getMediaType(),
-								currentItems.get(i).getTitle(),
-								currentItems.get(i).getArtist());
-					}
 					queryResults = currentItems;
+					hideAllComponents();
+					cancelButton.setVisible(true);
+					deleteButton.setVisible(true);
+					updateButton.setVisible(true);
+					resultsMessage.setText(currentItems.size() + " item(s) found:");
+					resultsArray = stringifyQueryResults();
+					resultsPanel.setVisible(true);
+					state = State.RESULTS;
 				}
 				break;
 			case UPDATE:
-				System.out.println("Item updated:");
-				System.out.printf("Media type: %s\nTitle: %s\nArtist: %s\n",
-						item.getMediaType(),
-						item.getTitle(),
-						item.getArtist());
+				hideAllComponents();
+				continueButton.setVisible(true);
+				itemUpdatedTitle.setText(item.getTitle());
+				itemUpdatedArtist.setText(item.getArtist());
+				itemUpdatedPanel.setVisible(true);
+				state = State.ITEM_UPDATED;
 				break;
 			case DELETE:
-				System.out.println("Item deleted:");
-				System.out.printf("Media type: %s\nTitle: %s\nArtist: %s\n",
-						item.getMediaType(),
-						item.getTitle(),
-						item.getArtist());
+				hideAllComponents();
+				continueButton.setVisible(true);
+				itemDeletedTitle.setText(item.getTitle());
+				itemDeletedArtist.setText(item.getArtist());
+				itemDeletedType.setText(item.getMediaType());
+				itemDeletedPanel.setVisible(true);
+				state = State.ITEM_DELETED;
 				break;
-		}
-
-		if (currentCommand.getType() == Command.Type.SEARCH){
-			if (currentItems.size() == 0){
-				start();
-			}
-			else {
-				int request = deleteOrUpdate();
-				handleUserRequest(request);
-			}
-		}
-		else {
-			int request = createOrSearch();
-			if (request == 3){
-				System.out.println("Session terminated.");
-			}
-			else {
-				handleUserRequest(request);
-			}
 		}
 	}
 }

@@ -9,4 +9,6 @@ public interface Viewable {
 	public void updateSelf(ArrayList<MediaItem> currentItems);
 	
 	public Command getCreateInfo();
+	
+	public void start();
 }
