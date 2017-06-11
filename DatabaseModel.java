@@ -8,7 +8,6 @@ import java.util.ArrayList;
 
 public class DatabaseModel implements Modelable{
 	private Viewable view;
-	private ResultSet current;
 	final String DATABASE_URL = "jdbc:postgresql:crud";
 	final String username = "postgres";
 	final String password = "password";
@@ -18,14 +17,14 @@ public class DatabaseModel implements Modelable{
 		this.view = view;
 	}
 	
+	
+	
 	public void runQuery(String query){
-		try (  
-	         Connection connection = DriverManager.getConnection(
-	            DATABASE_URL, username, password); 
-	         Statement statement = connection.createStatement(); 
-	         ResultSet resultSet = statement.executeQuery(query))
-		{
-			current = resultSet;
+		try {
+			Connection connection = DriverManager.getConnection(
+		            DATABASE_URL, username, password); 
+	        Statement statement = connection.createStatement(); 
+	        statement.executeQuery(query);
 		}
         catch (SQLException sqlException){                                                                  
 	         sqlException.printStackTrace();
@@ -35,8 +34,7 @@ public class DatabaseModel implements Modelable{
 	public void updateSelf(Command command){
 		MediaItem item = command.getMediaItem();
 		String query;
-		int index;
-		int id = -1;
+		int id = command.getQueryIndex();
 		switch (command.getType()){
 			case CREATE:
 				query = String.format("INSERT INTO iventory (mediatype, title, artist) VALUES (%s, %s, %s",
@@ -82,54 +80,26 @@ public class DatabaseModel implements Modelable{
 				runQuery(query);
 				break;
 			case UPDATE:
-				index = command.getQueryIndex();
-				for (int i = 0; i < index; i++){
-					try {
-						current.next();
-					}
-					catch (SQLException sqlException){                                                                  
-				         sqlException.printStackTrace();
-				    } 
-				}
-				try {
-					id = current.getInt(1);
-				}
-				catch (SQLException sqlException){                                                                  
-			         sqlException.printStackTrace();
-			    }
 				if (!item.getTitle().equals("")){
 					if (!item.getArtist().equals("")){
-						query = "UPDATE inventory SET title = " + item.getTitle() +
-							", SET artist = " + item.getArtist() + " WHERE id = " + id;
+						query = "UPDATE inventory SET title = '" + item.getTitle() +
+							"', artist = '" + item.getArtist() + "' WHERE id = " + id;
 					}
 					else {
-						query = "UPDATE inventory SET title = " + item.getTitle() +
-								" WHERE id = " + id;
+						query = "UPDATE inventory SET title = '" + item.getTitle() +
+								"' WHERE id = " + id;
 					}
 				}
 				else {
-					query = "UPDATE inventory SET artist = " + item.getArtist() +
-							" WHERE id = " + id;
+					query = "UPDATE inventory SET artist = '" + item.getArtist() +
+							"' WHERE id = " + id;
 				}
+				System.out.println("query:" + query);
 				runQuery(query);
 				break;
 			case DELETE:
-				index = command.getQueryIndex();
-				for (int i = 0; i < index; i++){
-					try {
-						current.next();
-					}
-					catch (SQLException sqlException){                                                                  
-				         sqlException.printStackTrace();
-				    } 
-				}
-				try {
-					id = current.getInt(1);
-				}
-				catch (SQLException sqlException){                                                                  
-			         sqlException.printStackTrace();
-			    }
 				query = "DELETE FROM inventory WHERE id = " + id;
+				System.out.println("query: " + query);
 				runQuery(query);
 				break;
 		}

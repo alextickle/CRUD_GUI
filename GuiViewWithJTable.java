@@ -19,12 +19,13 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 	private Controller controller;
 	private Modelable model;
 	private Command currentCommand;
-	private ResultSetTableModel queryResults;
+	private ResultSetTableModel tableModel;
 	private final JButton[] buttons;
 	private final JPanel[] panels;
 	private final String[] mediaTypes;
 	private final Dimension preferredPanelDimension;
-	private String[] selectedInfoArray;
+	private String selectedMediaType;
+	private int selectedId;
 	public static enum State {
 		HOME, CREATE, UPDATE, DELETE, SEARCH, 
 		RESULTS, ITEM_CREATED, ITEM_DELETED,
@@ -160,10 +161,13 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 				// if at results update panel, check for selection and go to update panel
 				if (state == State.RESULTS){
 					if (resultsTable.getSelectedRow() > -1){
-						String updatedTitle = (String) queryResults.getValueAt(resultsTable.getSelectedRow(), 2);
-						String updatedArtist = (String) queryResults.getValueAt(resultsTable.getSelectedRow(), 3);
+						selectedId = (int) tableModel.getValueAt(resultsTable.getSelectedRow(), 0);
+						selectedMediaType = (String) tableModel.getValueAt(resultsTable.getSelectedRow(), 1);
+						String updatedTitle = (String) tableModel.getValueAt(resultsTable.getSelectedRow(), 2);
+						String updatedArtist = (String) tableModel.getValueAt(resultsTable.getSelectedRow(), 3);
 						updateTitleField.setText(updatedTitle);
 						updateArtistField.setText(updatedArtist);
+						
 						hideAllComponents();
 						updateButton.setVisible(true);
 						cancelButton.setVisible(true);
@@ -176,6 +180,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 				}
 				// if at update panel, send UPDATE request to controller
 				else {
+					System.out.println("update button pressed");
 					currentCommand = getUpdateInfo();
 					controller.requestModelUpdate(currentCommand);
 				}
@@ -233,8 +238,8 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 						createArtistField.setText("");
 						break;
 					case ITEM_DELETED:
-						resultsTable.setModel(queryResults);
-						resultsMessage.setText(queryResults.getRowCount() + " item(s) found:");
+						resultsTable.setModel(tableModel);
+						resultsMessage.setText(tableModel.getRowCount() + " item(s) found:");
 						hideAllComponents();
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
@@ -244,7 +249,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 						break;
 					case ITEM_UPDATED:
 						hideAllComponents();
-						resultsTable.setModel(queryResults);
+						resultsTable.setModel(tableModel);
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
 						updateButton.setVisible(true);
@@ -517,7 +522,8 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 		Command updateCommand = new Command(Command.Type.UPDATE);
 		String title = updateTitleField.getText();
 		String artist = updateArtistField.getText();
-		String mediaType = selectedInfoArray[1];
+		String mediaType = selectedMediaType;
+		int id = selectedId;
 		switch (mediaType){
 			case "CD":
 				updateCommand.setMediaItem(new CD(title, artist));
@@ -531,8 +537,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 			default:
 				break;
 		}
-		int index = resultsTable.getSelectedRow();
-		updateCommand.setQueryIndex(index);
+		updateCommand.setQueryIndex(selectedId);
 		return updateCommand;
 	}
 	
@@ -541,10 +546,11 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 	public Command getDeleteInfo(){
 		Command deleteCommand = new Command(Command.Type.DELETE);
 		int row = resultsTable.getSelectedRow();
-		String mediaType = (String) resultsTable.getValueAt(row, 0);
-		String title = (String) resultsTable.getValueAt(row, 1);
-		String artist = (String) resultsTable.getValueAt(row, 0);
-		deleteCommand.setQueryIndex(row);
+		int id = (int) resultsTable.getValueAt(row, 0);
+		String mediaType = (String) resultsTable.getValueAt(row, 1);
+		String title = (String) resultsTable.getValueAt(row, 2);
+		String artist = (String) resultsTable.getValueAt(row, 3);
+		deleteCommand.setQueryIndex(id);
 		switch (mediaType){
 			case "CD": 
 				deleteCommand.setMediaItem(new CD(title, artist));
@@ -569,7 +575,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 	
 	// view receives info from model and updates self (9)
 	public void updateSelf(Object items){
-		ResultSetTableModel tableModel = (ResultSetTableModel) items;
+		tableModel = (ResultSetTableModel) items;
 		MediaItem item = currentCommand.getMediaItem();
 		switch (currentCommand.getType()){
 			case CREATE:
@@ -593,7 +599,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 					resultsTable.setModel(tableModel);
 					resultsPanel.setVisible(true);
 					state = State.RESULTS;
-					queryResults = null;
+					tableModel = null;
 				}
 				else {
 					hideAllComponents();
