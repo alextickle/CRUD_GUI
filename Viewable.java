@@ -6,7 +6,7 @@ public interface Viewable {
 	
 	public void requestInfoFromModel();
 	
-	public void updateSelf(ArrayList<MediaItem> currentItems);
+	public void updateSelf(Object currentItems);
 	
 	public Command getCreateInfo();
 	

@@ -8,7 +8,7 @@ import java.util.FormatterClosedException;
 import java.util.Properties;
 import java.util.Scanner;
 
-public class ProperitesModel implements Modelable{
+public class PropertiesModel implements Modelable{
 
 	private Viewable view;
 	private ArrayList<Properties> inventory;
@@ -21,7 +21,7 @@ public class ProperitesModel implements Modelable{
 	private int currentId;
 
 
-	public ProperitesModel(){
+	public PropertiesModel(){
 		this.inventory = new ArrayList<Properties>();
 		this.currentProperties = new ArrayList<Properties>();
 		loadInventory();

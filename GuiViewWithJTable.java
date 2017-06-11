@@ -5,23 +5,21 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
-public class GuiView extends JFrame implements Viewable{
+public class GuiViewWithJTable extends JFrame implements Viewable{
 	private Controller controller;
 	private Modelable model;
 	private Command currentCommand;
-	private ArrayList<MediaItem> queryResults;
+	private ResultSetTableModel queryResults;
 	private final JButton[] buttons;
 	private final JPanel[] panels;
 	private final String[] mediaTypes;
@@ -56,7 +54,7 @@ public class GuiView extends JFrame implements Viewable{
 	// results panel
 	private final JPanel resultsPanel;
 	private JLabel resultsMessage;
-	private final JList<String> resultsList;
+	private final JTable resultsTable;
 	
 	// search panel
 	private final JPanel searchPanel;
@@ -88,10 +86,9 @@ public class GuiView extends JFrame implements Viewable{
 	private JLabel itemDeletedArtist;
 	private JLabel itemDeletedType;
 
-	public GuiView(Controller controller){
+	public GuiViewWithJTable(Controller controller){
 		super("CRUD Application");
 		this.controller = controller;
-		this.queryResults = new ArrayList<MediaItem>();
 		String[] temp = {"", "CD", "DVD", "Book"};
 		this.mediaTypes = temp;
 		this.preferredPanelDimension = new Dimension(475, 315);
@@ -163,8 +160,8 @@ public class GuiView extends JFrame implements Viewable{
 			public void actionPerformed(ActionEvent event){
 				// if at results update panel, check for selection and go to update panel
 				if (state == State.RESULTS){
-					if (resultsList.getSelectedIndex() > -1){
-						String infoStr = resultsArray[resultsList.getSelectedIndex()];
+					if (resultsTable.getSelectedRow() > -1){
+						String infoStr = resultsArray[resultsTable.getSelectedRow()];
 						selectedInfoArray = infoStr.split(" - ");
 						updateTitleField.setText(selectedInfoArray[2]);
 						updateArtistField.setText(selectedInfoArray[3]);
@@ -194,7 +191,7 @@ public class GuiView extends JFrame implements Viewable{
 			@Override
 			public void actionPerformed(ActionEvent event){
 				// if item selected then send DELETE request to controller
-				if (resultsList.getSelectedIndex() > -1){
+				if (resultsTable.getSelectedRow() > -1){
 					currentCommand = getDeleteInfo();
 					controller.requestModelUpdate(currentCommand);
 				}
@@ -237,9 +234,8 @@ public class GuiView extends JFrame implements Viewable{
 						createArtistField.setText("");
 						break;
 					case ITEM_DELETED:
-						resultsArray = stringifyQueryResults();
-						resultsList.setListData(resultsArray);
-						resultsMessage.setText(resultsArray.length + " item(s) found:");
+						resultsTable.setModel(queryResults);
+						resultsMessage.setText(queryResults.getRowCount() + " item(s) found:");
 						hideAllComponents();
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
@@ -249,8 +245,7 @@ public class GuiView extends JFrame implements Viewable{
 						break;
 					case ITEM_UPDATED:
 						hideAllComponents();
-						resultsArray = stringifyQueryResults();
-						resultsList.setListData(resultsArray);
+						resultsTable.setModel(queryResults);
 						resultsPanel.setVisible(true);
 						deleteButton.setVisible(true);
 						updateButton.setVisible(true);
@@ -369,10 +364,8 @@ public class GuiView extends JFrame implements Viewable{
 		resultsHeader.add(new JLabel(" "));
 		resultsHeader.add(new JLabel("Id - Media type - Title - Artist", SwingConstants.LEFT));
 		resultsPanel.add(resultsHeader);
-		resultsList = new JList<String>(new String[1]);
-		resultsList.setVisibleRowCount(20);
-	    resultsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	    JScrollPane scroll = new JScrollPane(resultsList);
+		resultsTable = new JTable();
+	    JScrollPane scroll = new JScrollPane(resultsTable);
 	    scroll.setPreferredSize(new Dimension(400, 200));
 	    resultsPanel.add(scroll);
 	    resultsPanel.setVisible(false);
@@ -539,7 +532,7 @@ public class GuiView extends JFrame implements Viewable{
 			default:
 				break;
 		}
-		int index = resultsList.getSelectedIndex();
+		int index = resultsTable.getSelectedRow();
 		updateCommand.setQueryIndex(index);
 		return updateCommand;
 	}
@@ -548,23 +541,25 @@ public class GuiView extends JFrame implements Viewable{
 	// into a command object of type DELETE
 	public Command getDeleteInfo(){
 		Command deleteCommand = new Command(Command.Type.DELETE);
-		int index = resultsList.getSelectedIndex();
-		deleteCommand.setQueryIndex(index);
-		deleteCommand.setMediaItem(queryResults.get(index));
-		return deleteCommand;
-	}
-	
-	// converts queryResults list into string array for use with JLists
-	public String[] stringifyQueryResults(){
-		String[] toReturn = new String[queryResults.size()];
-		for (int i = 0; i < queryResults.size(); i++){
-			toReturn[i] = String.format("%s - %s - %s - %s",
-				queryResults.get(i).getId(),
-				queryResults.get(i).getMediaType(),
-				queryResults.get(i).getTitle(),
-				queryResults.get(i).getArtist());
+		int row = resultsTable.getSelectedRow();
+		String mediaType = (String) resultsTable.getValueAt(row, 0);
+		String title = (String) resultsTable.getValueAt(row, 1);
+		String artist = (String) resultsTable.getValueAt(row, 0);
+		deleteCommand.setQueryIndex(row);
+		switch (mediaType){
+			case "CD": 
+				deleteCommand.setMediaItem(new CD(title, artist));
+				break;
+			case "DVD": 
+				deleteCommand.setMediaItem(new DVD(title, artist));
+				break;
+			case "Book": 
+				deleteCommand.setMediaItem(new Book(title, artist));
+				break;
+			default:
+				break;
 		}
-		return toReturn;
+		return deleteCommand;
 	}
 	
 	// view receives alert from model and asks
@@ -575,7 +570,7 @@ public class GuiView extends JFrame implements Viewable{
 	
 	// view receives info from model and updates self (9)
 	public void updateSelf(Object items){
-		ArrayList<MediaItem> currentItems = (ArrayList<MediaItem>) items;
+		ResultSetTableModel tableModel = (ResultSetTableModel) items;
 		MediaItem item = currentCommand.getMediaItem();
 		switch (currentCommand.getType()){
 			case CREATE:
@@ -589,26 +584,25 @@ public class GuiView extends JFrame implements Viewable{
 				state = State.ITEM_CREATED;
 				break;
 			case SEARCH:
-				if (currentItems.size() == 0){
+				int rowcount = tableModel.getRowCount(); 
+				if (rowcount == 0){
 					hideAllComponents();
 					cancelButton.setVisible(true);
 					deleteButton.setVisible(true);
 					updateButton.setVisible(true);
 					resultsMessage.setText("No items matched your search.");
 					resultsArray = new String[0];
-					resultsList.setListData(resultsArray);
+					resultsTable.setModel(tableModel);
 					resultsPanel.setVisible(true);
 					state = State.RESULTS;
-					queryResults.clear();
+					queryResults = null;
 				}
 				else {
-					queryResults = currentItems;
 					hideAllComponents();
 					cancelButton.setVisible(true);
 					deleteButton.setVisible(true);
 					updateButton.setVisible(true);
-					resultsArray = stringifyQueryResults();
-					resultsList.setListData(resultsArray);
+					resultsTable.setModel(tableModel);
 					resultsMessage.setText(resultsArray.length + " item(s) found:");
 					resultsPanel.setVisible(true);
 					state = State.RESULTS;
@@ -616,7 +610,6 @@ public class GuiView extends JFrame implements Viewable{
 				searchTypeField.setSelectedIndex(0);
 				break;
 			case UPDATE:
-				queryResults = currentItems;
 				hideAllComponents();
 				continueButton.setVisible(true);
 				itemUpdatedTitle.setText("   " + item.getTitle());
@@ -626,7 +619,6 @@ public class GuiView extends JFrame implements Viewable{
 				state = State.ITEM_UPDATED;
 				break;
 			case DELETE:
-				queryResults = currentItems;
 				hideAllComponents();
 				continueButton.setVisible(true);
 				itemDeletedTitle.setText("   " + item.getTitle());

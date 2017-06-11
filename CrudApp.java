@@ -2,9 +2,9 @@ public class CrudApp {
 
 	public static void main(String[] args) {
 		
-		ProperitesModel model = new ProperitesModel();
+		DatabaseModel model = new DatabaseModel();
 		Controller controller = new Controller(model);
-		GuiView view = new GuiView(controller);
+		GuiViewWithJTable view = new GuiViewWithJTable(controller);
 		
 		model.setView(view);
 		view.setModel(model);

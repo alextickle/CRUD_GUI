@@ -107,7 +107,8 @@ public class TextView implements Viewable {
 
 	// view receives info from model and updates self (9)
 	// if command is type SEARCH, view calls updateOrDelete
-	public void updateSelf(ArrayList<MediaItem> currentItems){
+	public void updateSelf(Object items){
+		ArrayList<MediaItem> currentItems = (ArrayList<MediaItem>) items;
 		MediaItem item = currentCommand.getMediaItem();
 		switch (currentCommand.getType()){
 			case CREATE:
