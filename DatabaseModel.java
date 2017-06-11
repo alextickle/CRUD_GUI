@@ -37,7 +37,7 @@ public class DatabaseModel implements Modelable{
 		int id = command.getQueryIndex();
 		switch (command.getType()){
 			case CREATE:
-				query = String.format("INSERT INTO iventory (mediatype, title, artist) VALUES (%s, %s, %s",
+				query = String.format("INSERT INTO inventory (mediatype, title, artist) VALUES ('%s', '%s', '%s')",
 						item.getMediaType(), item.getTitle(), item.getArtist());
 				runQuery(query);
 				break;
@@ -45,39 +45,50 @@ public class DatabaseModel implements Modelable{
 				ArrayList<String[]> searchParameters = new ArrayList<String[]>();
 				String[] array = new String[2];
 				String parameter = item.getTitle();
-				if (!parameter.equals("")){
-					array = new String[]{"title", parameter};
-					searchParameters.add(array);
+				if (searchParameters.size() == 0){
+					query = "SELECT * FROM inventory";
+					runQuery(query);
+					lastSearchParams = searchParameters;
 				}
-				parameter = item.getArtist();
-				if (!parameter.equals("")){
-					array = new String[]{"artist", parameter};
-					searchParameters.add(array);
-				}
+				else {
+					if (!parameter.equals("")){
+						array = new String[]{"title", parameter};
+						searchParameters.add(array);
+					}
+					parameter = item.getArtist();
+					if (!parameter.equals("")){
+						array = new String[]{"artist", parameter};
+						searchParameters.add(array);
+					}
 
-				parameter = item.getId();
-				if (!parameter.equals("")){
-					array = new String[]{"id", parameter};
-					searchParameters.add(array);
-				}
+					parameter = item.getId();
+					if (!parameter.equals("")){
+						array = new String[]{"id", parameter};
+						searchParameters.add(array);
+					}
 
-				parameter = item.getMediaType();
-				if (!parameter.equals("")){
-					array = new String[]{"mediatype", parameter};
-					searchParameters.add(array);
+					parameter = item.getMediaType();
+					if (!parameter.equals("")){
+						array = new String[]{"mediatype", parameter};
+						searchParameters.add(array);
+					}
+					lastSearchParams = searchParameters;
+					int numOfParams = searchParameters.size();
+					query = "SELECT * FROM inventory WHERE ";
+					for (int i = 0; i < numOfParams - 1; i++){
+						query += String.format("%s = '%s' AND ",
+								searchParameters.get(i)[0],
+								searchParameters.get(i)[1]);
+					}
+					query += String.format("%s = '%s'", 
+							searchParameters.get(numOfParams - 1)[0],
+							searchParameters.get(numOfParams - 1)[1]);
+					
+					if (searchParameters.size() == 0){
+						query = "SELECT * FROM inventory";
+					}
+					runQuery(query);
 				}
-				lastSearchParams = searchParameters;
-				int numOfParams = searchParameters.size();
-				query = "SELECT * FROM inventory WHERE ";
-				for (int i = 0; i < numOfParams - 1; i++){
-					query += String.format("%s = '%s' AND ",
-							searchParameters.get(i)[0],
-							searchParameters.get(i)[1]);
-				}
-				query += String.format("%s = '%s'", 
-						searchParameters.get(numOfParams - 1)[0],
-						searchParameters.get(numOfParams - 1)[1]);
-				runQuery(query);
 				break;
 			case UPDATE:
 				if (!item.getTitle().equals("")){
@@ -113,23 +124,33 @@ public class DatabaseModel implements Modelable{
 			currentCommand.getType() == Command.Type.DELETE ||
 			currentCommand.getType() == Command.Type.SEARCH){
 			int numOfParams = lastSearchParams.size();
-			query = "SELECT * FROM inventory WHERE ";
-			for (int i = 0; i < numOfParams - 1; i++){
-				query += String.format("%s = '%s' AND ",
-						lastSearchParams.get(i)[0],
-						lastSearchParams.get(i)[1]);
+			if (numOfParams == 0){
+				query = "SELECT * FROM inventory";
 			}
-			query += String.format("%s = '%s'", 
-					lastSearchParams.get(numOfParams - 1)[0],
-					lastSearchParams.get(numOfParams - 1)[1]);
+			else {
+				query = "SELECT * FROM inventory WHERE ";
+				for (int i = 0; i < numOfParams - 1; i++){
+					query += String.format("%s = '%s' AND ",
+							lastSearchParams.get(i)[0],
+							lastSearchParams.get(i)[1]);
+				}
+				query += String.format("%s = '%s'", 
+						lastSearchParams.get(numOfParams - 1)[0],
+						lastSearchParams.get(numOfParams - 1)[1]);
+			}
+			try {
+				tableModel = new ResultSetTableModel(DATABASE_URL, username, password, query);
+				view.updateSelf(tableModel);
+			}
+			catch (SQLException sqlException){                                                                  
+		         sqlException.printStackTrace();
+		    }
 		}
-		try {
-			tableModel = new ResultSetTableModel(DATABASE_URL, username, password, query);
-			view.updateSelf(tableModel);
+		else {
+			view.updateSelf(new Object());
 		}
-		catch (SQLException sqlException){                                                                  
-	         sqlException.printStackTrace();
-	    }  
+		
+		 
 	}
 
 	public void alertView(){

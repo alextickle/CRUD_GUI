@@ -575,7 +575,6 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 	
 	// view receives info from model and updates self (9)
 	public void updateSelf(Object items){
-		tableModel = (ResultSetTableModel) items;
 		MediaItem item = currentCommand.getMediaItem();
 		switch (currentCommand.getType()){
 			case CREATE:
@@ -589,6 +588,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 				state = State.ITEM_CREATED;
 				break;
 			case SEARCH:
+				tableModel = (ResultSetTableModel) items;
 				int rowcount = tableModel.getRowCount(); 
 				if (rowcount == 0){
 					hideAllComponents();
@@ -614,6 +614,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 				searchTypeField.setSelectedIndex(0);
 				break;
 			case UPDATE:
+				tableModel = (ResultSetTableModel) items;
 				hideAllComponents();
 				continueButton.setVisible(true);
 				itemUpdatedTitle.setText("   " + item.getTitle());
@@ -623,6 +624,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 				state = State.ITEM_UPDATED;
 				break;
 			case DELETE:
+				tableModel = (ResultSetTableModel) items;
 				hideAllComponents();
 				continueButton.setVisible(true);
 				itemDeletedTitle.setText("   " + item.getTitle());
