@@ -23,7 +23,6 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 	private final JButton[] buttons;
 	private final JPanel[] panels;
 	private final String[] mediaTypes;
-	private String[] resultsArray;
 	private final Dimension preferredPanelDimension;
 	private String[] selectedInfoArray;
 	public static enum State {
@@ -161,10 +160,10 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 				// if at results update panel, check for selection and go to update panel
 				if (state == State.RESULTS){
 					if (resultsTable.getSelectedRow() > -1){
-						String infoStr = resultsArray[resultsTable.getSelectedRow()];
-						selectedInfoArray = infoStr.split(" - ");
-						updateTitleField.setText(selectedInfoArray[2]);
-						updateArtistField.setText(selectedInfoArray[3]);
+						String updatedTitle = (String) queryResults.getValueAt(resultsTable.getSelectedRow(), 2);
+						String updatedArtist = (String) queryResults.getValueAt(resultsTable.getSelectedRow(), 3);
+						updateTitleField.setText(updatedTitle);
+						updateArtistField.setText(updatedArtist);
 						hideAllComponents();
 						updateButton.setVisible(true);
 						cancelButton.setVisible(true);
@@ -591,7 +590,6 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 					deleteButton.setVisible(true);
 					updateButton.setVisible(true);
 					resultsMessage.setText("No items matched your search.");
-					resultsArray = new String[0];
 					resultsTable.setModel(tableModel);
 					resultsPanel.setVisible(true);
 					state = State.RESULTS;
@@ -603,7 +601,7 @@ public class GuiViewWithJTable extends JFrame implements Viewable{
 					deleteButton.setVisible(true);
 					updateButton.setVisible(true);
 					resultsTable.setModel(tableModel);
-					resultsMessage.setText(resultsArray.length + " item(s) found:");
+					resultsMessage.setText(resultsTable.getRowCount() + " item(s) found:");
 					resultsPanel.setVisible(true);
 					state = State.RESULTS;
 				}

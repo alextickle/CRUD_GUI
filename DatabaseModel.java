@@ -72,11 +72,11 @@ public class DatabaseModel implements Modelable{
 				int numOfParams = searchParameters.size();
 				query = "SELECT * FROM inventory WHERE ";
 				for (int i = 0; i < numOfParams - 1; i++){
-					query += String.format("%s = %s AND ",
+					query += String.format("%s = '%s' AND ",
 							searchParameters.get(i)[0],
 							searchParameters.get(i)[1]);
 				}
-				query += String.format("%s = %s", 
+				query += String.format("%s = '%s'", 
 						searchParameters.get(numOfParams - 1)[0],
 						searchParameters.get(numOfParams - 1)[1]);
 				runQuery(query);
@@ -139,15 +139,17 @@ public class DatabaseModel implements Modelable{
 	public void sendUpdatedInfoToView(Command currentCommand){
 		String query = "";
 		ResultSetTableModel tableModel;
-		if (currentCommand.getType() == Command.Type.UPDATE || currentCommand.getType() == Command.Type.DELETE){
+		if (currentCommand.getType() == Command.Type.UPDATE || 
+			currentCommand.getType() == Command.Type.DELETE ||
+			currentCommand.getType() == Command.Type.SEARCH){
 			int numOfParams = lastSearchParams.size();
 			query = "SELECT * FROM inventory WHERE ";
 			for (int i = 0; i < numOfParams - 1; i++){
-				query += String.format("%s = %s AND ",
+				query += String.format("%s = '%s' AND ",
 						lastSearchParams.get(i)[0],
 						lastSearchParams.get(i)[1]);
 			}
-			query += String.format("%s = %s", 
+			query += String.format("%s = '%s'", 
 					lastSearchParams.get(numOfParams - 1)[0],
 					lastSearchParams.get(numOfParams - 1)[1]);
 		}
